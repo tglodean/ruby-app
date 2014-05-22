@@ -45,4 +45,10 @@ module SessionsHelper
 			redirect_to signin_url, notice: "Please sign in."
 		end
 	end
+	# def signed_in_user_is_logged
+	# 	if signed_in?
+	# 		store_location
+	# 		redirect_to root_path, notice: "You are logged in"
+	# 	end
+	# end
 end

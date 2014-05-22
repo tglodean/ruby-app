@@ -16,7 +16,11 @@ describe "User pages" do
           sign_in admin
           visit users_path
         end
-
+        it "should not be able to delete itself" do
+          expect { delete user_path(admin) }.not_to change(User, :count)
+        end
+        
+        
         it { should have_link('delete', href: user_path(User.first)) }
         it "should be able to delete another user" do
           expect do
@@ -146,7 +150,7 @@ describe "User pages" do
       #   fill_in "Password",     with: "foobar"
       #   fill_in "Confirmation", with: "foobar"
       # end
-       before { valid_signup } 
+      before { valid_signup } 
 
       describe "after saving the user" do
         before { click_button submit }
@@ -170,62 +174,74 @@ describe "User pages" do
       visit edit_user_path(user)
     end
 
-    describe "with valid information" do
-      let(:new_name)  { "New Name" }
-      let(:new_email) { "new@example.com" }
-      before do
-        fill_in "Name",             with: new_name
-        fill_in "Email",            with: new_email
-        fill_in "Password",         with: user.password
-        fill_in "Confirm Password", with: user.password
-        click_button "Save changes"
+    describe "forbidden attributes" do
+      let(:params) do
+        { user: { admin: true, password: user.password,
+          password_confirmation: user.password } }
+        end
+        before do
+          sign_in user, no_capybara: true
+          patch user_path(user), params
+        end
+        specify { expect(user.reload).not_to be_admin }
       end
 
-      it { should have_title(new_name) }
-      it { should have_selector('div.alert.alert-success') }
-      it { should have_link('Sign out', href: signout_path) }
-      specify { expect(user.reload.name).to  eq new_name }
-      specify { expect(user.reload.email).to eq new_email }
-    end
-    describe "page" do
-      it { should have_content("Update your profile") }
-      it { should have_title("Edit user") }
-      it { should have_link('change', href: 'http://gravatar.com/emails') }
+      describe "with valid information" do
+        let(:new_name)  { "New Name" }
+        let(:new_email) { "new@example.com" }
+        before do
+          fill_in "Name",             with: new_name
+          fill_in "Email",            with: new_email
+          fill_in "Password",         with: user.password
+          fill_in "Confirm Password", with: user.password
+          click_button "Save changes"
+        end
+
+        it { should have_title(new_name) }
+        it { should have_selector('div.alert.alert-success') }
+        it { should have_link('Sign out', href: signout_path) }
+        specify { expect(user.reload.name).to  eq new_name }
+        specify { expect(user.reload.email).to eq new_email }
+      end
+      describe "page" do
+        it { should have_content("Update your profile") }
+        it { should have_title("Edit user") }
+        it { should have_link('change', href: 'http://gravatar.com/emails') }
+      end
+
+      describe "with invalid information" do
+        before { click_button "Save changes" }
+
+        it { should have_content('error') }
+      end
     end
 
-    describe "with invalid information" do
-      before { click_button "Save changes" }
 
-      it { should have_content('error') }
+    describe "following/followers" do
+      let(:user) { FactoryGirl.create(:user) }
+      let(:other_user) { FactoryGirl.create(:user) }
+      before { user.follow!(other_user) }
+
+      describe "followed users" do
+        before do
+          sign_in user
+          visit following_user_path(user)
+        end
+
+        it { should have_title(full_title('Following')) }
+        it { should have_selector('h3', text: 'Following') }
+        it { should have_link(other_user.name, href: user_path(other_user)) }
+      end
+
+      describe "followers" do
+        before do
+          sign_in other_user
+          visit followers_user_path(other_user)
+        end
+
+        it { should have_title(full_title('Followers')) }
+        it { should have_selector('h3', text: 'Followers') }
+        it { should have_link(user.name, href: user_path(user)) }
+      end
     end
   end
-
-
-  describe "following/followers" do
-    let(:user) { FactoryGirl.create(:user) }
-    let(:other_user) { FactoryGirl.create(:user) }
-    before { user.follow!(other_user) }
-
-    describe "followed users" do
-      before do
-        sign_in user
-        visit following_user_path(user)
-      end
-
-      it { should have_title(full_title('Following')) }
-      it { should have_selector('h3', text: 'Following') }
-      it { should have_link(other_user.name, href: user_path(other_user)) }
-    end
-
-    describe "followers" do
-      before do
-        sign_in other_user
-        visit followers_user_path(other_user)
-      end
-
-      it { should have_title(full_title('Followers')) }
-      it { should have_selector('h3', text: 'Followers') }
-      it { should have_link(user.name, href: user_path(user)) }
-    end
-  end
-end

@@ -2,6 +2,7 @@ class UsersController < ApplicationController
 
 
   before_action :signed_in_user, only: [:index, :edit, :update, :destroy, :following, :followers]
+  # before_action :signed_in_user_is_logged, only: [:new, :create]
   before_action :correct_user,   only: [:edit, :update]
   before_action :admin_user,     only: :destroy
 
@@ -26,24 +27,49 @@ class UsersController < ApplicationController
   def edit
   end
 
+  # def destroy
+  #   User.find(params[:id]).destroy
+  #   flash[:success] = "User deleted."
+  #   redirect_to users_url
+  # end
   def destroy
-    User.find(params[:id]).destroy
-    flash[:success] = "User deleted."
-    redirect_to users_url
+    @user = User.find(params[:id])
+    if current_user?(@user)
+      redirect_to users_path, notice: "You can't destroy yourself."
+    else
+      @user.destroy
+      flash[:success] = "User destroyed."
+      redirect_to users_path
+    end
   end
+  # def destroy
+  #   user = User.find(params[:id])
+  #   if (current_user? user) && (current_user.admin?)
+  #     flash[:error] = "You are not allowed to delete yourself as an admin."
+  #   else
+  #     user.destroy
+  #     flash[:success] = "User destroyed. ID: #{user.id}"
+  #   end
+  #   redirect_to users_path
+  # end
   def update
     if @user.update_attributes(user_params)
      flash[:success] = "Profile updated"
      redirect_to @user
    else
     render 'edit'
+    end
   end
-end
 
 def new
- @user = User.new
+  unless signed_in?
+    @user = User.new
+    @title = "Sign up"
+  else
+    flash[:info] = "You're already logged in, so you cannot create a new account."
+    redirect_to root_path
+  end
 end
-
 def show
   @user = User.find(params[:id])
   @microposts = @user.microposts.paginate(page: params[:page])
@@ -58,7 +84,7 @@ def create
     else
       render 'new'
     end
-  end
+end
 
 
   private
