@@ -47,7 +47,12 @@ describe User do
 
     it { should be_following(other_user) }
     its(:followed_users) { should include(other_user) }
+    it "should destroy associated followed_users and followers" do
+      @user.destroy
 
+      expect(other_user.followers).not_to include(@user)
+      expect(other_user.followed_users).not_to include(@user)
+    end
     describe "followed user" do
       subject { other_user }
       its(:followers) { should include(@user) }
@@ -59,7 +64,27 @@ describe User do
       its(:followed_users) { should_not include(other_user) }
     end
   end
+  describe "relationships" do
+    let(:other_user) { FactoryGirl.create(:user) }
+    before do
+      @user.save
+      @user.follow!(other_user)
+    end
 
+    let(:relationship) { @user.relationships.last }
+
+    describe "should be destroyed when the followed user is destroyed" do
+      before { other_user.destroy }
+      its(:relationships) { should_not include(relationship) }
+      its(:reverse_relationships) { should_not include(relationship) }
+    end
+
+    describe "should be destroyed when the following user is destroyed" do
+      subject { other_user }
+      before { @user.destroy }
+      its(:reverse_relationships) { should_not include(relationship) }
+    end
+  end
 
 
   describe "with admin attribute set to 'true'" do
