@@ -36,7 +36,6 @@
 #   # end
 # end
 require 'spec_helper'
-
 describe "Static pages" do
 
   subject { page }
@@ -67,6 +66,18 @@ describe "Static pages" do
         end
       end
 
+      # it { should have_selector('section span', text: view.pluralize(Micropost.count.to_s, "micropost"))} ??
+      it "should show the total feeds" do
+        expect(page).to have_content("micropost".pluralize(user.feed.count))                  
+      end
+      describe "pagination" do
+        after(:all) { user.microposts.delete_all unless user.microposts.nil? }
+        it "should paginate the feed" do
+         40.times { FactoryGirl.create(:micropost, user: user) }
+         visit root_path
+         page.should have_selector('div.pagination')
+       end
+     end
       describe "follower/following counts" do
         let(:other_user) { FactoryGirl.create(:user) }
         before do
