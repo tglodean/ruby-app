@@ -23,7 +23,9 @@ module SessionsHelper
 	def signed_in?
 		!current_user.nil?
 	end
-
+	def confirmed_user?
+		!current_user.nil? && current_user.user_state?
+	end
 	def sign_out
 		current_user.update_attribute(:remember_token,
 			User.digest(User.new_remember_token))

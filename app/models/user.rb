@@ -10,6 +10,7 @@ class User < ActiveRecord::Base
   before_save { self.email = email.downcase }
   # before_save { email.downcase! }
   before_create { create_token(:remember_token) }
+  after_create { set_user_state_false }
 
   validates :name, presence: true
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(?:\.[a-z\d\-]+)*\.[a-z]+\z/i
@@ -45,6 +46,14 @@ class User < ActiveRecord::Base
    self.password_reset_sent_at = Time.zone.now
    save! validate: false
    UserMailer.password_reset(self).deliver
+  end
+  def send_email_confirm
+    create_token(:email_confirm_token)
+    save! validate: false
+    UserMailer.email_confirm(self).deliver
+  end
+  def set_user_state_false
+    self.toggle!(:user_state)
   end
   private
 
