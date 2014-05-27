@@ -20,6 +20,7 @@ class User < ActiveRecord::Base
   has_secure_password
   def feed
     Micropost.from_users_followed_by(self)
+    Micropost.from_users_followed_by_including_replies(self)
   end
   def User.new_remember_token
     SecureRandom.urlsafe_base64
