@@ -23,6 +23,10 @@ class User < ActiveRecord::Base
     Micropost.from_users_followed_by(self)
     Micropost.from_users_followed_by_including_replies(self)
   end
+
+  def self.search(query)
+    where("email like ?", "%#{query}%")
+  end
   def User.new_remember_token
     SecureRandom.urlsafe_base64
   end

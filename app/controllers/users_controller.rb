@@ -21,7 +21,12 @@ class UsersController < ApplicationController
   end
   
   def index
-    @users = User.paginate(page: params[:page])
+    if params[:search]
+      @user = User.search(params[:search]).order("created_at DESC")
+      @users = @user.paginate(page: params[:page])
+    else
+      @users = User.paginate(page: params[:page])
+    end
   end
 
   def edit
