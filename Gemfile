@@ -4,9 +4,10 @@ source 'https://rubygems.org'
 gem 'rails', '4.0.4'
 
 group :development, :test do
-	gem 'rspec-rails', '2.13.1'
-# Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+  gem 'rspec-rails', '2.13.1'
+  # Use sqlite3 as the database for Active Record
+  gem 'sqlite3'
+  gem 'awesome_print'
 end
 gem 'bootstrap-sass', '2.3.2.0'
 gem 'table_print'
